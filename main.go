@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"flag"
-	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hisaichi5518/vache"
 	"github.com/takebayashi/npbbis"
@@ -17,9 +16,11 @@ import (
 )
 
 var dsn string
+var updateToken string
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
+	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
 	root := os.Getenv("HOMERUNERATE_ROOT")
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
@@ -129,8 +130,13 @@ func getGameBaseStats(year int) ([]*GameBaseStat, error) {
 }
 
 func handleCrawling(c web.C, w http.ResponseWriter, r *http.Request) {
-	crawl(c.URLParams["date"])
-	fmt.Fprintf(w, "done")
+	if r.FormValue("token") == updateToken {
+		date := c.URLParams["date"]
+		crawl(date)
+		w.Write([]byte("Update done: " + date + "\n"))
+	} else {
+		w.WriteHeader(403)
+	}
 }
 
 func crawl(date string) {
