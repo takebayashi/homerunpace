@@ -1,7 +1,6 @@
 package main
 
 import (
-	"compress/gzip"
 	"database/sql"
 	"encoding/json"
 	"flag"
@@ -54,10 +53,7 @@ func handleStats(c web.C, w http.ResponseWriter, r *http.Request) {
 	} else {
 		j = []byte(v)
 	}
-	w.Header().Set("Content-Encoding", "gzip")
-	gz := gzip.NewWriter(w)
-	defer gz.Close()
-	gz.Write(j)
+	w.Write(j)
 }
 
 type Stat struct {
