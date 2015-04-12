@@ -21,10 +21,11 @@ var dsn string
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
+	root := os.Getenv("HOMERUNERATE_ROOT")
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
 	goji.Post("/crawler/:date", handleCrawling)
-	goji.Handle("/", http.FileServer(http.Dir("static")))
+	goji.Handle("/", http.FileServer(http.Dir(root+"/static")))
 	goji.Serve()
 }
 
