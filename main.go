@@ -4,6 +4,7 @@ import (
 	"compress/gzip"
 	"database/sql"
 	"encoding/json"
+	"flag"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/hisaichi5518/vache"
@@ -20,6 +21,7 @@ var dsn string
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
+	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
 	goji.Post("/crawler/:date", handleCrawling)
 	goji.Handle("/", http.FileServer(http.Dir("static")))
