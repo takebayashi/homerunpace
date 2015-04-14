@@ -36,25 +36,30 @@ func handleStats(c web.C, w http.ResponseWriter, r *http.Request) {
 	var j []byte
 	v, ok := vache.Get(key)
 	if !ok {
-		var stats []interface{}
-		switch by {
-		case "date":
-			ss, _ := getStats(year)
-			for _, s := range ss {
-				stats = append(stats, s)
-			}
-		case "game":
-			ss, _ := getGameBaseStats(year)
-			for _, s := range ss {
-				stats = append(stats, s)
-			}
-		}
-		j, _ = json.MarshalIndent(stats, "", "\t")
-		vache.Set(key, string(j), 3600*time.Second)
+		j = generateStats(year, by)
+		vache.Set(key, string(j), 10800*time.Second)
 	} else {
 		j = []byte(v)
 	}
 	w.Write(j)
+}
+
+func generateStats(year int, by string) []byte {
+	var stats []interface{}
+	switch by {
+	case "date":
+		ss, _ := getStats(year)
+		for _, s := range ss {
+			stats = append(stats, s)
+		}
+	case "game":
+		ss, _ := getGameBaseStats(year)
+		for _, s := range ss {
+			stats = append(stats, s)
+		}
+	}
+	j, _ := json.MarshalIndent(stats, "", "\t")
+	return j
 }
 
 type Stat struct {
@@ -133,6 +138,12 @@ func handleCrawling(c web.C, w http.ResponseWriter, r *http.Request) {
 	if r.FormValue("token") == updateToken {
 		date := c.URLParams["date"]
 		crawl(date)
+		year, _ := strconv.Atoi(date[:4])
+		for _, by := range []string{"date", "game"} {
+			key := strconv.Itoa(year) + by
+			j := generateStats(year, by)
+			vache.Set(key, string(j), 10800*time.Second)
+		}
 		w.Write([]byte("Update done: " + date + "\n"))
 	} else {
 		w.WriteHeader(403)
