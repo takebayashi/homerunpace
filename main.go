@@ -5,22 +5,22 @@ import (
 	"encoding/json"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/hisaichi5518/vache"
 	"github.com/takebayashi/npbbis"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 	"net/http"
 	"os"
 	"strconv"
-	"time"
 )
 
 var dsn string
 var updateToken string
+var cache map[string]string
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
 	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
+	cache = make(map[string]string)
 	root := os.Getenv("HOMERUNERATE_ROOT")
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
@@ -34,10 +34,10 @@ func handleStats(c web.C, w http.ResponseWriter, r *http.Request) {
 	by := r.FormValue("by")
 	key := strconv.Itoa(year) + by
 	var j []byte
-	v, ok := vache.Get(key)
+	v, ok := cache[key]
 	if !ok {
 		j = generateStats(year, by)
-		vache.Set(key, string(j), 10800*time.Second)
+		cache[key] = string(j)
 	} else {
 		j = []byte(v)
 	}
@@ -142,7 +142,7 @@ func handleCrawling(c web.C, w http.ResponseWriter, r *http.Request) {
 		for _, by := range []string{"date", "game"} {
 			key := strconv.Itoa(year) + by
 			j := generateStats(year, by)
-			vache.Set(key, string(j), 10800*time.Second)
+			cache[key] = string(j)
 		}
 		w.Write([]byte("Update done: " + date + "\n"))
 	} else {
