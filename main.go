@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"flag"
+	"github.com/garyburd/redigo/redis"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/takebayashi/npbbis"
 	"github.com/zenazn/goji"
@@ -15,12 +16,15 @@ import (
 
 var dsn string
 var updateToken string
-var cache map[string]string
+
+var redisNetwork string
+var redisAddress string
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
 	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
-	cache = make(map[string]string)
+	redisNetwork = os.Getenv("HOMERUNRATE_REDIS_NETWORK")
+	redisAddress = os.Getenv("HOMERUNRATE_REDIS_ADDRESS")
 	root := os.Getenv("HOMERUNERATE_ROOT")
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
@@ -34,10 +38,16 @@ func handleStats(c web.C, w http.ResponseWriter, r *http.Request) {
 	by := r.FormValue("by")
 	key := strconv.Itoa(year) + by
 	var j []byte
-	v, ok := cache[key]
-	if !ok {
+
+	rc, err := redis.Dial(redisNetwork, redisAddress)
+	if err != nil {
+		panic(err)
+	}
+
+	v, err := redis.String(rc.Do("GET", key))
+	if err != nil {
 		j = generateStats(year, by)
-		cache[key] = string(j)
+		rc.Do("SET", key, j)
 	} else {
 		j = []byte(v)
 	}
@@ -139,10 +149,16 @@ func handleCrawling(c web.C, w http.ResponseWriter, r *http.Request) {
 		date := c.URLParams["date"]
 		crawl(date)
 		year, _ := strconv.Atoi(date[:4])
+
+		rc, err := redis.Dial(redisNetwork, redisAddress)
+		if err != nil {
+			panic(err)
+		}
+
 		for _, by := range []string{"date", "game"} {
 			key := strconv.Itoa(year) + by
 			j := generateStats(year, by)
-			cache[key] = string(j)
+			rc.Do("SET", key, string(j))
 		}
 		w.Write([]byte("Update done: " + date + "\n"))
 	} else {
