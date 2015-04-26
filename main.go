@@ -18,6 +18,7 @@ var updateToken string
 var redisNetwork string
 var redisAddress string
 var redisPassword string
+var redisMaxIdle int
 
 func main() {
 	dsn = os.Getenv("HOMERUNRATE_DSN")
@@ -25,6 +26,11 @@ func main() {
 	redisNetwork = os.Getenv("HOMERUNRATE_REDIS_NETWORK")
 	redisAddress = os.Getenv("HOMERUNRATE_REDIS_ADDRESS")
 	redisPassword = os.Getenv("HOMERUNRATE_REDIS_PASSWORD")
+	var envErr error
+	redisMaxIdle, envErr = strconv.Atoi("HOMERUNRATE_REDIS_MAX_IDLE")
+	if envErr != nil {
+		redisMaxIdle = 5
+	}
 	root := os.Getenv("HOMERUNERATE_ROOT")
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
@@ -38,7 +44,7 @@ var redisPool *redis.Pool
 func newRedisConn() redis.Conn {
 	if redisPool == nil {
 		redisPool = &redis.Pool{
-			MaxIdle:     3,
+			MaxIdle:     redisMaxIdle,
 			IdleTimeout: 600 * time.Second,
 			Dial: func() (redis.Conn, error) {
 				c, err := redis.Dial(redisNetwork, redisAddress)
