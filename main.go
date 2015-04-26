@@ -25,6 +25,7 @@ var redisMaxIdle int
 
 func main() {
 	// configure
+	logFile := os.Getenv("HOMERUNRATE_LOGFILE")
 	dsn = os.Getenv("HOMERUNRATE_DSN")
 	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
 	redisNetwork = os.Getenv("HOMERUNRATE_REDIS_NETWORK")
@@ -47,6 +48,13 @@ func main() {
 	goji.Abandon(middleware.Logger)
 	logger := logrus.New()
 	logger.Formatter = new(logrus.JSONFormatter)
+	if logFile != "" {
+		f, err := os.OpenFile(logFile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			panic(err)
+		}
+		logger.Out = f
+	}
 	goji.Use(glogrus.NewGlogrus(logger, "homerunpace"))
 
 	// start app
