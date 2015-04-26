@@ -3,9 +3,12 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
+	"github.com/goji/glogrus"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
+	"github.com/zenazn/goji/web/middleware"
 	"net/http"
 	"os"
 	"strconv"
@@ -21,6 +24,7 @@ var redisPassword string
 var redisMaxIdle int
 
 func main() {
+	// configure
 	dsn = os.Getenv("HOMERUNRATE_DSN")
 	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
 	redisNetwork = os.Getenv("HOMERUNRATE_REDIS_NETWORK")
@@ -32,10 +36,20 @@ func main() {
 		redisMaxIdle = 5
 	}
 	root := os.Getenv("HOMERUNERATE_ROOT")
+
+	// build server
 	flag.Set("bind", ":80")
 	goji.Get("/stats/:year", handleStats)
 	goji.Post("/crawler/:date", handleCrawling)
 	goji.Handle("/", http.FileServer(http.Dir(root+"/static")))
+
+	// replace default logger with Logrus
+	goji.Abandon(middleware.Logger)
+	logger := logrus.New()
+	logger.Formatter = new(logrus.JSONFormatter)
+	goji.Use(glogrus.NewGlogrus(logger, "homerunpace"))
+
+	// start app
 	goji.Serve()
 }
 
