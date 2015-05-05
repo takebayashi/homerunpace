@@ -20,11 +20,11 @@ func getStats(year int) ([]*Stat, error) {
     SELECT
       date,
       COUNT(*),
-      (SELECT COUNT(*) FROM homeruns h INNER JOIN games g ON h.game = g.id WHERE YEAR(g.date) = ? AND g.date <= o.date)
+      (SELECT COUNT(*) FROM homeruns h INNER JOIN games g ON h.game = g.id WHERE DATE_PART('year', g.date) = $1 AND g.date <= o.date)
     FROM games o
-    WHERE YEAR(date) = ? AND status = "" AND type = 0 GROUP BY date ORDER BY date
+    WHERE DATE_PART('year', date) = $1 AND status = '' AND type = 0 GROUP BY date ORDER BY date
   `
-	rows, err := db.Query(q, year, year)
+	rows, err := db.Query(q, year)
 	if err != nil {
 		return nil, err
 	}
@@ -55,9 +55,9 @@ func getGameBaseStats(year int) ([]*GameBaseStat, error) {
 		return nil, err
 	}
 	q := `
-    SELECT id, (SELECT COUNT(*) FROM homeruns h INNER JOIN games g ON h.game = g.id WHERE YEAR(g.date) = ? AND g.id <= o.id) FROM games o WHERE YEAR(date) = ? AND status = "" AND type = 0 GROUP BY id ORDER BY id
+    SELECT id, (SELECT COUNT(*) FROM homeruns h INNER JOIN games g ON h.game = g.id WHERE DATE_PART('year', g.date) = $1 AND g.id <= o.id) FROM games o WHERE DATE_PART('year', date) = $1 AND status = '' AND type = 0 GROUP BY id ORDER BY id
   `
-	rows, err := db.Query(q, year, year)
+	rows, err := db.Query(q, year)
 	if err != nil {
 		return nil, err
 	}
