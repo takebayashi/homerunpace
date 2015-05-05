@@ -2,7 +2,7 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 )
 
 type Stat struct {
@@ -12,7 +12,7 @@ type Stat struct {
 }
 
 func getStats(year int) ([]*Stat, error) {
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ type GameBaseStat struct {
 }
 
 func getGameBaseStats(year int) ([]*GameBaseStat, error) {
-	db, err := sql.Open("mysql", dsn)
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
 		return nil, err
 	}
