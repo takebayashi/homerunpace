@@ -25,18 +25,18 @@ var redisMaxIdle int
 
 func main() {
 	// configure
-	logFile := os.Getenv("HOMERUNRATE_LOGFILE")
-	dsn = os.Getenv("HOMERUNRATE_DSN")
-	updateToken = os.Getenv("HOMERUNERATE_TOKEN")
-	redisNetwork = os.Getenv("HOMERUNRATE_REDIS_NETWORK")
-	redisAddress = os.Getenv("HOMERUNRATE_REDIS_ADDRESS")
-	redisPassword = os.Getenv("HOMERUNRATE_REDIS_PASSWORD")
+	logFile := os.Getenv("HOMERUNPACE_LOGFILE")
+	dsn = os.Getenv("HOMERUNPACE_DSN")
+	updateToken = os.Getenv("HOMERUNPACE_TOKEN")
+	redisNetwork = os.Getenv("HOMERUNPACE_REDIS_NETWORK")
+	redisAddress = os.Getenv("HOMERUNPACE_REDIS_ADDRESS")
+	redisPassword = os.Getenv("HOMERUNPACE_REDIS_PASSWORD")
 	var envErr error
-	redisMaxIdle, envErr = strconv.Atoi("HOMERUNRATE_REDIS_MAX_IDLE")
+	redisMaxIdle, envErr = strconv.Atoi("HOMERUNPACE_REDIS_MAX_IDLE")
 	if envErr != nil {
 		redisMaxIdle = 5
 	}
-	root := os.Getenv("HOMERUNERATE_ROOT")
+	root := os.Getenv("HOMERUNPACE_ROOT")
 
 	// build server
 	flag.Set("bind", ":80")
