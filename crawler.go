@@ -26,6 +26,7 @@ func updateGame(game *npbbis.Game, db *sql.DB, date string) error {
 	if err != nil {
 		return err
 	}
+	defer exists.Close()
 	q := "INSERT INTO games VALUES ($1, $2, $3, 0)"
 	if exists.Next() {
 		q = "UPDATE games SET date = $2, status = $3 WHERE id = $1"
@@ -42,6 +43,7 @@ func updateHomerun(hr *npbbis.Homerun, game *npbbis.Game, db *sql.DB) error {
 	if err != nil {
 		return err
 	}
+	defer exists.Close()
 	q := "INSERT INTO homeruns VALUES ($1, $2, $3, $4, $5)"
 	if exists.Next() {
 		q = "UPDATE homeruns SET scenario = $4, pitcher = $5 WHERE game = $1 AND batter = $2 AND number = $3"
