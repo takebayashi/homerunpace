@@ -1,10 +1,5 @@
 package main
 
-import (
-	"database/sql"
-	_ "github.com/lib/pq"
-)
-
 type Stat struct {
 	Date         string `json:"date"`
 	GameCount    int    `json:"game_count"`
@@ -12,10 +7,6 @@ type Stat struct {
 }
 
 func getStats(year int) ([]*Stat, error) {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, err
-	}
 	q := `
     SELECT
       date,
@@ -50,10 +41,6 @@ type GameBaseStat struct {
 }
 
 func getGameBaseStats(year int) ([]*GameBaseStat, error) {
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		return nil, err
-	}
 	q := `
     SELECT id, (SELECT COUNT(*) FROM homeruns h INNER JOIN games g ON h.game = g.id WHERE DATE_PART('year', g.date) = $1 AND g.id <= o.id) FROM games o WHERE DATE_PART('year', date) = $1 AND status = '' AND type = 0 GROUP BY id ORDER BY id
   `

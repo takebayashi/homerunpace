@@ -1,27 +1,20 @@
 package main
 
 import (
-	"database/sql"
-	_ "github.com/lib/pq"
 	"github.com/takebayashi/npbbis"
 )
 
 func crawl(date string) {
 	games, _ := npbbis.GetGames(date)
-	db, err := sql.Open("postgres", dsn)
-	if err != nil {
-		panic(err)
-	}
-	defer db.Close()
 	for _, game := range games {
-		updateGame(game, db, date)
+		updateGame(game, date)
 		for _, hr := range game.Homeruns {
-			updateHomerun(hr, game, db)
+			updateHomerun(hr, game)
 		}
 	}
 }
 
-func updateGame(game *npbbis.Game, db *sql.DB, date string) error {
+func updateGame(game *npbbis.Game, date string) error {
 	exists, err := db.Query("SELECT 1 FROM games WHERE id = $1", game.Id)
 	if err != nil {
 		return err
@@ -38,7 +31,7 @@ func updateGame(game *npbbis.Game, db *sql.DB, date string) error {
 	return nil
 }
 
-func updateHomerun(hr *npbbis.Homerun, game *npbbis.Game, db *sql.DB) error {
+func updateHomerun(hr *npbbis.Homerun, game *npbbis.Game) error {
 	exists, err := db.Query("SELECT 1 FROM homeruns WHERE game = $1 AND batter = $2 AND number = $3", game.Id, hr.Batter, hr.Number)
 	if err != nil {
 		return err

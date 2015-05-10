@@ -1,11 +1,13 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"flag"
 	"github.com/Sirupsen/logrus"
 	"github.com/garyburd/redigo/redis"
 	"github.com/goji/glogrus"
+	_ "github.com/lib/pq"
 	"github.com/zenazn/goji"
 	"github.com/zenazn/goji/web"
 	"github.com/zenazn/goji/web/middleware"
@@ -23,7 +25,11 @@ var redisAddress string
 var redisPassword string
 var redisMaxIdle int
 
+var db *sql.DB
+
 func main() {
+	var err error
+
 	// configure
 	logFile := os.Getenv("HOMERUNPACE_LOGFILE")
 	dsn = os.Getenv("HOMERUNPACE_DSN")
@@ -37,6 +43,13 @@ func main() {
 		redisMaxIdle = 5
 	}
 	root := os.Getenv("HOMERUNPACE_ROOT")
+
+	// connect to database
+	db, err = sql.Open("postgres", dsn)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
 
 	// build server
 	flag.Set("bind", ":80")
